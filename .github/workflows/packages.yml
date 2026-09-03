@@ -129,8 +129,50 @@ jobs:
         run: |
           dnf install -y --setopt=install_weak_deps=False \
             git rpm-build rpmdevtools gcc cmake pkgconf-pkg-config \
-            libuv-devel argtable-devel libconfig-devel yder-devel \
+            libuv-devel argtable-devel libconfig-devel \
             libxdg-basedir-devel procps-ng-devel
+
+      # yder, and orcania beneath it, are what simd logs through, and Fedora
+      # packages neither -- `dnf install yder-devel` fails outright with "No
+      # match for argument" on both 43 and 44, while Debian and Ubuntu ship
+      # libyder-dev. Built here as *static* libraries on purpose: linked into
+      # simd they leave the rpm with no runtime dependency Fedora cannot
+      # satisfy, so the spec's Requires: stays as upstream wrote it.
+      - name: Build vendored orcania and yder (static)
+        run: |
+          set -eux
+          # BUILD_SHARED=OFF as well as BUILD_STATIC=ON: both default to
+          # shared-only, and a libyder.so left in the prefix is picked over the
+          # archive, putting back a runtime dependency no Fedora repo can meet.
+          #
+          # -Wno-error via CMAKE_C_FLAGS_RELEASE, not CMAKE_C_FLAGS: both
+          # projects append their own -Wall -Werror to CMAKE_C_FLAGS, so
+          # setting it is overridden. The _RELEASE flags land after it, where
+          # the last of -Werror/-Wno-error wins. orcania 2.3.3 assigns the
+          # result of strstr() on a const pointer to a char*, which current
+          # GCC rejects as -Werror=discarded-qualifiers.
+          cflags='-O2 -DNDEBUG -Wno-error'
+
+          git clone --depth 1 --branch v2.3.3 https://github.com/babelouest/orcania /tmp/orcania
+          cmake -S /tmp/orcania -B /tmp/orcania/build \
+            -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_C_FLAGS_RELEASE="$cflags" \
+            -DBUILD_SHARED=OFF -DBUILD_STATIC=ON -DBUILD_ORCANIA_TESTING=OFF
+          cmake --build /tmp/orcania/build --target install
+
+          git clone --depth 1 --branch v1.4.20 https://github.com/babelouest/yder /tmp/yder
+          # Journald would pull in systemd-devel for a backend simd never
+          # selects; its config offers file and syslog.
+          cmake -S /tmp/yder -B /tmp/yder/build \
+            -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_C_FLAGS_RELEASE="$cflags" \
+            -DBUILD_SHARED=OFF -DBUILD_STATIC=ON -DWITH_JOURNALD=OFF \
+            -DBUILD_YDER_TESTING=OFF
+          cmake --build /tmp/yder/build --target install
+
+          # Fail here rather than shipping a broken rpm: nothing later in this
+          # job would notice a dynamically linked simd.
+          test -f /usr/lib64/libyder.a || test -f /usr/lib/libyder.a
 
       - uses: actions/checkout@v4
 
@@ -180,9 +222,12 @@ jobs:
           files: "*.rpm"
 
   appimage:
-    # Built on an older base on purpose: an AppImage is only as portable as
-    # the oldest glibc it links against.
-    runs-on: ubuntu-22.04
+    # Oldest base that actually builds this, since an AppImage is only as
+    # portable as the oldest glibc it links against. 22.04 does not: it ships
+    # libprocps rather than libproc2, so getpid.c fails on a missing
+    # <libproc2/pids.h>, and its GCC predates the C23 fixed-underlying-type
+    # enums in include/F12018/*.h ("expected identifier or '(' before ':'").
+    runs-on: ubuntu-24.04
     permissions:
       contents: write
     steps:
@@ -194,7 +239,7 @@ jobs:
           sudo apt-get install -y --no-install-recommends \
             build-essential cmake pkg-config file wget \
             libuv1-dev libargtable2-dev libconfig-dev libyder-dev \
-            libxdg-basedir-dev libprocps-dev
+            libxdg-basedir-dev libproc2-dev
 
       - name: Determine version
         id: pkgver

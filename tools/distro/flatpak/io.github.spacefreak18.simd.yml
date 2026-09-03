@@ -150,6 +150,13 @@ modules:
   - name: orcania
     buildsystem: cmake-ninja
     config-opts:
+      # Everything into /app/lib, not the lib64 CMake picks by default here:
+      # orcania and yder both landed in /app/lib64, so when yder configured,
+      # pkg-config did not find liborcania.pc under /app/lib/pkgconfig and
+      # yder linked without it. The failure surfaced much later and looked
+      # unrelated -- simd failed to link with undefined references to
+      # o_malloc/o_free/o_strdup/split_string coming out of libyder.so.
+      - -DCMAKE_INSTALL_LIBDIR=lib
       - -DCMAKE_BUILD_TYPE=Release
       - -DCMAKE_C_FLAGS_RELEASE=-O2 -DNDEBUG -Wno-error
       - -DBUILD_ORCANIA_TESTING=OFF
@@ -163,6 +170,13 @@ modules:
   - name: yder
     buildsystem: cmake-ninja
     config-opts:
+      # Everything into /app/lib, not the lib64 CMake picks by default here:
+      # orcania and yder both landed in /app/lib64, so when yder configured,
+      # pkg-config did not find liborcania.pc under /app/lib/pkgconfig and
+      # yder linked without it. The failure surfaced much later and looked
+      # unrelated -- simd failed to link with undefined references to
+      # o_malloc/o_free/o_strdup/split_string coming out of libyder.so.
+      - -DCMAKE_INSTALL_LIBDIR=lib
       - -DCMAKE_BUILD_TYPE=Release
       - -DCMAKE_C_FLAGS_RELEASE=-O2 -DNDEBUG -Wno-error
       # Journald would need systemd-devel for a backend simd never selects;
