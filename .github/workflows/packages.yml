@@ -253,8 +253,12 @@ jobs:
       - name: Build and stage an AppDir
         run: |
           set -eux
+          # CMAKE_INSTALL_LIBDIR pinned: GNUInstallDirs picks the multiarch
+          # triplet on Ubuntu, so the library landed in
+          # AppDir/usr/lib/x86_64-linux-gnu while everything downstream looked
+          # in AppDir/usr/lib.
           cmake -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr \
-            -DBUILD_SIMD=ON \
+            -DBUILD_SIMD=ON -DCMAKE_INSTALL_LIBDIR=lib \
             -DSYSTEMD_USER_UNIT_DIR=/usr/lib/systemd/user \
             -DSIMD_CONFIG_DIR=/usr/share/simd
           cmake --build build -j"$(nproc)"

@@ -207,6 +207,10 @@ modules:
       # Flatpak anyway; autostart is a ~/.config/autostart entry instead.
       - -DINSTALL_SYSTEMD_SERVICE=off
       - -DSIMD_CONFIG_DIR=/app/share/simd
+      # Pinned rather than left to GNUInstallDirs, which picks lib64 here and
+      # the multiarch triplet on Debian. Every consumer of this prefix then
+      # has to guess which, and both guesses have already been wrong once.
+      - -DCMAKE_INSTALL_LIBDIR=lib
     build-options:
       env:
         LIBRARY_PATH: /app/lib
@@ -217,6 +221,9 @@ modules:
       # The desktop entry names this icon; without it installed, appstream
       # has a component referencing an icon that does not exist.
       - install -Dm644 tools/distro/simd.svg /app/share/icons/hicolor/scalable/apps/io.github.spacefreak18.simd.svg
+      # A raster icon as well: appstreamcli compose wants a real 64x64-or-
+      # larger icon and will not rely on rasterising the SVG.
+      - install -Dm644 tools/distro/simd-128.png /app/share/icons/hicolor/128x128/apps/io.github.spacefreak18.simd.png
     sources:
       - type: dir
         path: ../../..
