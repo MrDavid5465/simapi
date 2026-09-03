@@ -214,6 +214,9 @@ modules:
       - install -Dm644 LICENSE.rst /app/share/licenses/simd/LICENSE.rst
       - install -Dm644 tools/distro/flatpak/io.github.spacefreak18.simd.desktop /app/share/applications/io.github.spacefreak18.simd.desktop
       - install -Dm644 tools/distro/flatpak/io.github.spacefreak18.simd.metainfo.xml /app/share/metainfo/io.github.spacefreak18.simd.metainfo.xml
+      # The desktop entry names this icon; without it installed, appstream
+      # has a component referencing an icon that does not exist.
+      - install -Dm644 tools/distro/simd.svg /app/share/icons/hicolor/scalable/apps/io.github.spacefreak18.simd.svg
     sources:
       - type: dir
         path: ../../..

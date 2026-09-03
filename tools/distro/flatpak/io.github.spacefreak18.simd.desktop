@@ -6,10 +6,10 @@ Icon=io.github.spacefreak18.simd
 Terminal=false
 Type=Application
 Categories=Game;Utility;
-# Not shown in menus: simd has no user interface. The entry exists so desktop
-# "startup applications" tools can find it, and so an autostart entry can
-# reference it by app id.
-NoDisplay=true
+# Deliberately listed rather than NoDisplay=true. simd has no window, but the
+# entry is how a desktop's "startup applications" picker finds it, which is
+# how this is meant to be started -- and appstreamcli compose discards a
+# NoDisplay component, leaving the Flatpak with no metadata at all.
 # -n (--nodaemon) above is deliberate. simd double-forks by default, and under
 # `flatpak run` the sandbox is torn down when the process it started exits --
 # taking the daemon with it. Running in the foreground keeps flatpak's own

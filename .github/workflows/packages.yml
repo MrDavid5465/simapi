@@ -128,7 +128,7 @@ jobs:
       - name: Install build dependencies
         run: |
           dnf install -y --setopt=install_weak_deps=False \
-            git rpm-build rpmdevtools gcc cmake pkgconf-pkg-config \
+            git rpm-build rpmdevtools gcc gcc-c++ cmake pkgconf-pkg-config \
             libuv-devel argtable-devel libconfig-devel \
             libxdg-basedir-devel procps-ng-devel
 
@@ -277,6 +277,10 @@ jobs:
           wget -q https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage
           chmod +x linuxdeploy-x86_64.AppImage
           export OUTPUT="simd-${{ steps.pkgver.outputs.version }}-x86_64.AppImage"
+          # simd links libsimapi.so.1, which is inside the AppDir and nowhere
+          # on the system, so linuxdeploy's ldd-based resolution reported
+          # "Could not find dependency: libsimapi.so.1" and refused to deploy.
+          export LD_LIBRARY_PATH="$PWD/AppDir/usr/lib:${LD_LIBRARY_PATH:-}"
           ./linuxdeploy-x86_64.AppImage --appdir AppDir \
             --desktop-file AppDir/usr/share/applications/io.github.spacefreak18.simd.desktop \
             --icon-file tools/distro/simd.svg \
