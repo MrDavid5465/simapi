@@ -218,11 +218,11 @@ modules:
       - install -Dm644 LICENSE.rst /app/share/licenses/simd/LICENSE.rst
       - install -Dm644 tools/distro/flatpak/io.github.spacefreak18.simd.desktop /app/share/applications/io.github.spacefreak18.simd.desktop
       - install -Dm644 tools/distro/flatpak/io.github.spacefreak18.simd.metainfo.xml /app/share/metainfo/io.github.spacefreak18.simd.metainfo.xml
-      # The desktop entry names this icon; without it installed, appstream
-      # has a component referencing an icon that does not exist.
-      - install -Dm644 tools/distro/simd.svg /app/share/icons/hicolor/scalable/apps/io.github.spacefreak18.simd.svg
-      # A raster icon as well: appstreamcli compose wants a real 64x64-or-
-      # larger icon and will not rely on rasterising the SVG.
+      # PNG only, deliberately. Installing the SVG as well fails the build:
+      # appstreamcli in the freedesktop SDK cannot decode it at all and
+      # aborts compose with "Unrecognized image file format", which surfaces
+      # only as "appstreamcli compose failed". Reproduced and confirmed fixed
+      # by running compose against a staged prefix.
       - install -Dm644 tools/distro/simd-128.png /app/share/icons/hicolor/128x128/apps/io.github.spacefreak18.simd.png
     sources:
       - type: dir

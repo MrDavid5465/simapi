@@ -269,6 +269,12 @@ jobs:
           rm -f AppDir/usr/lib/systemd/user/simd.service
           install -Dm644 tools/distro/flatpak/io.github.spacefreak18.simd.desktop \
             AppDir/usr/share/applications/io.github.spacefreak18.simd.desktop
+          # linuxdeploy takes the icon's *name* from its filename and matches
+          # it against the desktop file's Icon= entry, so simd-128.png would
+          # be deployed as "simd-128" and the entry naming
+          # io.github.spacefreak18.simd finds nothing: "Could not find
+          # suitable icon for Icon entry".
+          cp tools/distro/simd-128.png io.github.spacefreak18.simd.png
           install -Dm644 LICENSE.rst AppDir/usr/share/doc/simd/LICENSE.rst
 
       - name: Package the AppImage
@@ -287,7 +293,7 @@ jobs:
           export LD_LIBRARY_PATH="$PWD/AppDir/usr/lib:${LD_LIBRARY_PATH:-}"
           ./linuxdeploy-x86_64.AppImage --appdir AppDir \
             --desktop-file AppDir/usr/share/applications/io.github.spacefreak18.simd.desktop \
-            --icon-file tools/distro/simd.svg \
+            --icon-file io.github.spacefreak18.simd.png \
             --output appimage
 
       - uses: actions/upload-artifact@v4

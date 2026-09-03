@@ -34,7 +34,14 @@ cd $RPM_BUILD_DIR/simapi
 # The two *_DIR variables default under $ENV{HOME}; a package must never
 # write into a user's home. Redirected rather than patched upstream, since
 # both are already CACHE PATH variables.
+# CMAKE_SKIP_RPATH: simd links libsimapi out of the build tree, so CMake bakes
+# that path in as a RUNPATH and rpm's check-rpaths rejects the resulting
+# binary outright ("contains an invalid runpath ... /rpmbuild/BUILD/..."). The
+# spec's %%global __brp_check_rpaths %%{nil} no longer suppresses that check on
+# Fedora 43/44. Not emitting the RUNPATH is the deterministic fix, and nothing
+# needs it: libsimapi installs to a standard system library directory.
 cmake -B build -DBUILD_SIMD=on -DCMAKE_INSTALL_PREFIX=/usr \
+  -DCMAKE_SKIP_RPATH=ON \
   -DSYSTEMD_USER_UNIT_DIR=/usr/lib/systemd/user \
   -DSIMD_CONFIG_DIR=/usr/share/simd
 cd build
