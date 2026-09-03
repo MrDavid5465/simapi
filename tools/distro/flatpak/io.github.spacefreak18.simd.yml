@@ -198,8 +198,15 @@ modules:
         LIBRARY_PATH: /app/lib
     post-install:
       - install -Dm644 LICENSE.rst /app/share/licenses/simd/LICENSE.rst
-      - install -Dm644 packaging/flatpak/io.github.spacefreak18.simd.desktop /app/share/applications/io.github.spacefreak18.simd.desktop
-      - install -Dm644 packaging/flatpak/io.github.spacefreak18.simd.metainfo.xml /app/share/metainfo/io.github.spacefreak18.simd.metainfo.xml
+      - install -Dm644 tools/distro/flatpak/io.github.spacefreak18.simd.desktop /app/share/applications/io.github.spacefreak18.simd.desktop
+      - install -Dm644 tools/distro/flatpak/io.github.spacefreak18.simd.metainfo.xml /app/share/metainfo/io.github.spacefreak18.simd.metainfo.xml
     sources:
       - type: dir
-        path: ../..
+        path: ../../..
+        # Local build trees are not part of the source. Without these a
+        # developer's build/ and stage/ get copied into the sandbox, where a
+        # stale CMakeCache.txt pointing at host paths breaks the configure
+        # step in ways that look nothing like their cause.
+        skip:
+          - build
+          - stage
